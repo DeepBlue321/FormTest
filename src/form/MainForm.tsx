@@ -14,22 +14,77 @@
  * vykresleny pole z form/NestedFields
  */
 
-// příklad očekávaného výstupního JSON, předvyplňte tímto objektem formulář
-const initialValues = {
-  amount: 250,
-  allocation: 140,
-  damagedParts: ['side', 'rear'],
-  category: 'kitchen-accessories',
-  witnesses: [
-    {
-      name: 'Marek',
-      email: 'marek@email.cz',
-    },
-    {
-      name: 'Emily',
-      email: 'emily.johnson@x.dummyjson.com',
-    },
-  ],
-};
+
+
+import React, { useContext } from "react";
+import {  Controller } from "react-hook-form";
+
+import NestedFields from "./NestedFields";
+import { FormContext, FormContextType } from "../context/FormContext";
+
+
 
 const damagedPartsOptions = ['roof', 'front', 'side', 'rear'];
+
+
+const MainForm: React.FC = () => {
+ 
+  const {errors,control,handleSubmit,setValue} = useContext<FormContextType | undefined>(FormContext);
+  const onSubmit = (data: unknown) => {
+    console.log(data);
+  };
+
+  return (  <form onSubmit={handleSubmit(onSubmit)}>
+  <div>
+    <label>Amount:</label>
+    <Controller
+      name="amount"
+      control={control}
+      render={({ field }) => (
+        <input
+          type="number"
+          {...field}
+          style={errors.amount ? { border: "1px solid red" } : {}}
+        />
+      )}
+    />
+    {errors.amount && <p style={{ color: "red" }}>{errors.amount.message}</p>}
+  </div>
+
+  <div>
+    <label>Damaged Parts:</label>
+    {damagedPartsOptions.map((part) => (
+      <label key={part}>
+        <Controller
+          name="damagedParts"
+          control={control}
+          render={({ field }) => (
+            <input
+              type="checkbox"
+              value={part}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                const value = field.value;
+                if (checked) {
+                  setValue("damagedParts", [...value, part]);
+                } else {
+                  setValue("damagedParts", value.filter((v: string) => v !== part));
+                }
+              }}
+            />
+          )}
+        />
+        {part}
+      </label>
+    ))}
+    {errors.damagedParts && <p style={{ color: "red" }}>{errors.damagedParts.message}</p>}
+  </div>
+
+   <NestedFields />  
+
+  <button type="submit">Submit</button>
+</form>)
+
+}
+
+export default MainForm;
